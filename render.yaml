@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: tedx-auth
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn tedx_auth.wsgi
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        value: your-secret-key
+      - key: SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
+        value: your-client-id
+      - key: SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
+        value: your-client-secret
