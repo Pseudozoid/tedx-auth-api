@@ -4,10 +4,14 @@ services:
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn tedx_auth.wsgi
+    plan: free
     envVars:
       - key: DJANGO_SECRET_KEY
-        value: your-secret-key
+        sync: false
       - key: SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
-        value: your-client-id
+        sync: false
       - key: SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
-        value: your-client-secret
+        sync: false
+      - key: DEBUG
+        value: false
+
