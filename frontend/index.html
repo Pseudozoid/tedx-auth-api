@@ -107,6 +107,7 @@
       });
     }
 
+    
     function signup() {
       const username = document.getElementById('username').value;
       const email = document.getElementById('email').value;
@@ -117,15 +118,18 @@
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ username, password, email })
       })
-      .then(res => res.json())
-      .then(data => {
-        if (data.username) {
+      .then(res => {
+        if (res.status === 201) {
           alert('Signup successful. You can now log in.');
         } else {
-          alert('Signup failed.');
+          return res.json().then(data => {
+            console.error(data);
+            alert('Signup failed.');
+          });
         }
       });
     }
+
 
     function loginWithGoogle() {
       window.location.href = `${API}/oauth/login/google-oauth2/`;
