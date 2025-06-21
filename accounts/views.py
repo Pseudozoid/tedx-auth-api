@@ -51,14 +51,12 @@ def google_login_redirect(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsAdminUserRole])
 def list_users(request):
-    users = User.objects.all()
-    data = [
-        {
-            "id": user.id,
+    users_data = []
+    for user in User.objects.all():
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        users_data.append({
             "username": user.username,
             "email": user.email,
-            "role": getattr(user.userprofile, 'role', 'user')
-        }
-        for user in users
-    ]
-    return Response(data)
+            "role": profile.role
+        })
+    return Response(users_data)
