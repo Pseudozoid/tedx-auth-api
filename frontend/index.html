@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -76,6 +77,11 @@
     <pre id="admin-result"></pre>
   </div>
 
+  <div class="box" id="logout-panel" style="display: none;">
+    <h3>Logout</h3>
+    <button onclick="logout()">Log Out</button>
+  </div>
+
   <script>
     const BASE_URL = 'https://tedx-auth-api.onrender.com';
     let accessToken = '';
@@ -86,6 +92,7 @@
       if (access) {
         accessToken = access;
         document.getElementById("login-result").innerText = "✅ Logged in via Google!";
+        document.getElementById("logout-panel").style.display = "block";
       }
     };
 
@@ -145,7 +152,8 @@
         } else {
           accessToken = data.access || '';
           resultBox.className = 'success';
-          resultBox.innerText = '✅ Logged in successfully!\n\n' + JSON.stringify(data, null, 2);
+          resultBox.innerText = '✅ Logged in successfully!';
+          document.getElementById("logout-panel").style.display = "block";
         }
 
       } catch (err) {
@@ -180,10 +188,13 @@
           errorEl.innerText = '❌ Failed to fetch profile. Are you logged in?';
           u.innerText = e.innerText = r.innerText = '-';
           document.getElementById("admin-panel").style.display = "none";
+          document.getElementById("logout-panel").style.display = "none";
         } else {
           u.innerText = data.username;
           e.innerText = data.email;
           r.innerText = data.role;
+
+          document.getElementById("logout-panel").style.display = "block";
 
           if (data.role === 'admin') {
             document.getElementById("admin-panel").style.display = "block";
@@ -196,6 +207,7 @@
         errorEl.innerText = '❌ Network error while fetching profile.';
         u.innerText = e.innerText = r.innerText = '-';
         document.getElementById("admin-panel").style.display = "none";
+        document.getElementById("logout-panel").style.display = "none";
       }
     }
 
@@ -221,6 +233,18 @@
       } catch (err) {
         resultBox.innerText = '❌ Network error while accessing admin area.';
       }
+    }
+
+    function logout() {
+      accessToken = '';
+      document.getElementById("login-result").innerText = '';
+      document.getElementById("profile-error").innerText = '';
+      document.getElementById("p-username").innerText = '-';
+      document.getElementById("p-email").innerText = '-';
+      document.getElementById("p-role").innerText = '-';
+      document.getElementById("admin-panel").style.display = "none";
+      document.getElementById("logout-panel").style.display = "none";
+      alert("Logged out.");
     }
   </script>
 </body>
