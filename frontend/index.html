@@ -73,7 +73,9 @@
   <div class="box" id="admin-panel" style="display: none;">
     <h3>Admin Control Panel</h3>
     <button onclick="accessAdminArea()">Access Admin Area</button>
+    <button onclick="listUsers()">List All Users</button>
     <pre id="admin-result"></pre>
+    <pre id="user-list"></pre>
   </div>
 
   <div class="box" id="logout-panel" style="display: none;">
@@ -89,8 +91,10 @@
     window.onload = () => {
       const params = new URLSearchParams(window.location.search);
       const access = params.get("access");
+      const refresh = params.get("refresh");
       if (access) {
         accessToken = access;
+        refreshToken = refresh || '';
         document.getElementById("login-result").innerText = "✅ Logged in via Google!";
         document.getElementById("logout-panel").style.display = "block";
       }
@@ -262,6 +266,30 @@
 
       } catch (err) {
         resultBox.innerText = '❌ Network error while accessing admin area.';
+      }
+    }
+
+    async function listUsers() {
+      const output = document.getElementById("user-list");
+      output.innerText = "Fetching user list...";
+
+      try {
+        const res = await fetch(`${BASE_URL}/api/admin/users/`, {
+          headers: {
+            Authorization: 'Bearer ' + accessToken
+          }
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          output.innerText = '❌ Access denied or failed to fetch users.';
+        } else {
+          output.innerText = JSON.stringify(data, null, 2);
+        }
+
+      } catch (err) {
+        output.innerText = '❌ Network error while fetching user list.';
       }
     }
 

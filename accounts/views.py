@@ -1,9 +1,11 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
+from django.contrib.auth.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
 from .serializers import RegisterSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import CustomTokenObtainPairSerializer
@@ -45,3 +47,18 @@ def google_login_redirect(request):
         url = f"http://localhost:8080/?access={token['access']}&refresh={token['refresh']}"
         return redirect(url)
     return JsonResponse({'error': 'No token generated'}, status=400)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsAdminUserRole])
+def list_users(request):
+    users = User.objects.all()
+    data = [
+        {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "role": getattr(user.userprofile, 'role', 'user')
+        }
+        for user in users
+    ]
+    return Response(data)

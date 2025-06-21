@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import RegisterView, ProfileView, CustomLoginView, AdminOnlyView, google_login_redirect
+from .views import RegisterView, ProfileView, CustomLoginView, AdminOnlyView, google_login_redirect, list_users
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
@@ -9,5 +9,6 @@ urlpatterns = [
     path('profile/', ProfileView.as_view(), name='profile'),
     path('google/redirect/', google_login_redirect, name='google-redirect'),
     path('admin-area/', AdminOnlyView.as_view(), name='admin-area'),
+    path('admin/users/', list_users, name='list-users'),
 ]
 
