@@ -1,80 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>TEDxCUSAT Auth</title>
   <style>
+    :root {
+      --tedx-red: #E62B1E;
+      --tedx-black: #000;
+      --tedx-white: #fff;
+      --light-gray: #f8f8f8;
+    }
+
     body {
-      font-family: sans-serif;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      background-color: var(--light-gray);
+      color: var(--tedx-black);
       max-width: 600px;
       margin: auto;
       padding: 20px;
     }
 
+    h1 {
+      color: var(--tedx-red);
+      text-align: center;
+      font-weight: 900;
+    }
+
     input, button {
-      display: block;
+      font-size: 1rem;
       margin: 10px 0;
-      padding: 8px;
+      padding: 10px;
       width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      background-color: var(--tedx-red);
+      color: var(--tedx-white);
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+    }
+
+    button:hover {
+      background-color: #c02418;
     }
 
     .box {
+      background: var(--tedx-white);
       border: 1px solid #ccc;
       padding: 16px;
       margin-bottom: 20px;
       border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .tab-header {
+      display: flex;
+      margin-bottom: 10px;
+    }
+
+    .tab-button {
+      flex: 1;
+      padding: 10px;
+      cursor: pointer;
+      text-align: center;
+      background: #eee;
+      border: 1px solid #ccc;
+      font-weight: bold;
+    }
+
+    .tab-button.active {
+      background: var(--tedx-white);
+      border-bottom: none;
+      color: var(--tedx-red);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
     }
 
     .error {
-      color: #c00;
+      color: var(--tedx-red);
+      font-weight: bold;
     }
 
     .success {
-      color: #0a0;
+      color: green;
+      font-weight: bold;
+    }
+
+    #profile-display p {
+      margin: 5px 0;
+    }
+
+    #logout-panel button {
+      background-color: var(--tedx-black);
+    }
+
+    #logout-panel button:hover {
+      background-color: #333;
     }
   </style>
 </head>
 <body>
-  <h1>TEDxCUSAT Auth Tester</h1>
+  <h1>TEDxCUSAT Auth</h1>
 
   <div class="box">
-    <h3>Signup</h3>
-    <input id="signup-username" placeholder="Username">
-    <input id="signup-email" placeholder="Email">
-    <input id="signup-password" placeholder="Password" type="password">
-    <button onclick="signup()">Sign Up</button>
-    <div id="signup-result"></div>
+    <div class="tab-header">
+      <div id="login-tab-btn" class="tab-button active" onclick="switchTab('login')">Login</div>
+      <div id="signup-tab-btn" class="tab-button" onclick="switchTab('signup')">Signup</div>
+    </div>
+
+    <div id="login-tab" class="tab-content active">
+      <input id="login-identifier" placeholder="Username or Email" />
+      <input id="login-password" placeholder="Password" type="password" />
+      <button onclick="login()">Log In</button>
+      <div id="login-result"></div>
+    </div>
+
+    <div id="signup-tab" class="tab-content">
+      <input id="signup-username" placeholder="Username" />
+      <input id="signup-email" placeholder="Email" />
+      <input id="signup-password" placeholder="Password" type="password" />
+      <button onclick="signup()">Sign Up</button>
+      <div id="signup-result"></div>
+    </div>
   </div>
 
   <div class="box">
-    <h3>Login (Username or Email)</h3>
-    <input id="login-identifier" placeholder="Username or Email">
-    <input id="login-password" placeholder="Password" type="password">
-    <button onclick="login()">Log In</button>
-    <div id="login-result"></div>
+    <h3>Or use your Google Account</h3>
+    <button onclick="googleLogin()">Login with Google</button>
   </div>
 
   <div class="box">
-    <h3>Login with Google</h3>
-    <button onclick="googleLogin()">Login via Google</button>
-  </div>
-
-  <div class="box">
-    <h3>Get Profile</h3>
-    <button onclick="getProfile()">Fetch Profile (JWT Required)</button>
+    <h3>Profile</h3>
+    <button onclick="getProfile()">Fetch Profile</button>
     <div id="profile-display">
       <p><strong>Username:</strong> <span id="p-username">-</span></p>
       <p><strong>Email:</strong> <span id="p-email">-</span></p>
       <p><strong>Role:</strong> <span id="p-role">-</span></p>
-      <p id="profile-error" style="color: red;"></p>
+      <p id="profile-error" class="error"></p>
     </div>
   </div>
 
   <div class="box" id="admin-panel" style="display: none;">
-    <h3>Admin Control Panel</h3>
+    <h3>Admin Panel</h3>
     <button onclick="accessAdminArea()">Access Admin Area</button>
     <pre id="admin-result"></pre>
-    <button onclick="fetchUsers()">Fetch All Users</button>
+    <button onclick="fetchUsers()">List Users</button>
     <pre id="users-result"></pre>
   </div>
 
@@ -88,6 +168,15 @@
     let accessToken = '';
     let refreshToken = '';
 
+    function switchTab(tab) {
+      ['login', 'signup'].forEach(t => {
+        document.getElementById(`${t}-tab`).classList.remove('active');
+        document.getElementById(`${t}-tab-btn`).classList.remove('active');
+      });
+      document.getElementById(`${tab}-tab`).classList.add('active');
+      document.getElementById(`${tab}-tab-btn`).classList.add('active');
+    }
+
     window.onload = () => {
       const params = new URLSearchParams(window.location.search);
       const access = params.get("access");
@@ -97,13 +186,13 @@
         refreshToken = refresh || '';
         document.getElementById("login-result").innerText = "✅ Logged in via Google!";
         document.getElementById("logout-panel").style.display = "block";
-        getProfile();  // auto-fetch after OAuth login
+        getProfile();
       }
     };
 
     async function signup() {
-      const password = document.getElementById('signup-password').value;
       const resultBox = document.getElementById('signup-result');
+      const password = document.getElementById('signup-password').value;
 
       if (password.length < 8) {
         resultBox.className = 'error';
@@ -114,10 +203,8 @@
       const payload = {
         username: document.getElementById('signup-username').value,
         email: document.getElementById('signup-email').value,
-        password: password
+        password
       };
-
-      resultBox.innerText = 'Signing up...';
 
       try {
         const res = await fetch(`${BASE_URL}/api/signup/`, {
@@ -127,7 +214,6 @@
         });
 
         const data = await res.json();
-
         if (!res.ok) {
           resultBox.className = 'error';
           resultBox.innerText = '❌ ' + (data?.email || data?.username || data?.password || JSON.stringify(data));
@@ -135,7 +221,7 @@
           resultBox.className = 'success';
           resultBox.innerText = '✅ Signup successful!';
         }
-      } catch (err) {
+      } catch {
         resultBox.className = 'error';
         resultBox.innerText = '❌ Network error. Is the server running?';
       }
@@ -148,7 +234,6 @@
       };
 
       const resultBox = document.getElementById('login-result');
-      resultBox.innerText = 'Logging in...';
 
       try {
         const res = await fetch(`${BASE_URL}/api/login/`, {
@@ -158,20 +243,18 @@
         });
 
         const data = await res.json();
-
         if (!res.ok) {
           resultBox.className = 'error';
           resultBox.innerText = '❌ Invalid username/email or password.';
         } else {
-          accessToken = data.access || '';
-          refreshToken = data.refresh || '';
+          accessToken = data.access;
+          refreshToken = data.refresh;
           resultBox.className = 'success';
           resultBox.innerText = '✅ Logged in successfully!';
           document.getElementById("logout-panel").style.display = "block";
-          getProfile();  // auto-fetch after manual login
+          getProfile();
         }
-
-      } catch (err) {
+      } catch {
         resultBox.className = 'error';
         resultBox.innerText = '❌ Network error.';
       }
@@ -183,7 +266,6 @@
 
     async function refreshAccessToken() {
       if (!refreshToken) return false;
-
       try {
         const res = await fetch(`${BASE_URL}/api/token/refresh/`, {
           method: 'POST',
@@ -199,59 +281,45 @@
           logout();
           return false;
         }
-      } catch (err) {
+      } catch {
         logout();
         return false;
       }
     }
 
     async function getProfile(retrying = false) {
-      const errorEl = document.getElementById("profile-error");
       const u = document.getElementById("p-username");
       const e = document.getElementById("p-email");
       const r = document.getElementById("p-role");
-
-      errorEl.innerText = '';
-      u.innerText = e.innerText = r.innerText = '...';
+      const errorEl = document.getElementById("profile-error");
 
       try {
         const res = await fetch(`${BASE_URL}/api/profile/`, {
-          headers: {
-            Authorization: 'Bearer ' + accessToken
-          }
+          headers: { Authorization: 'Bearer ' + accessToken }
         });
 
         const data = await res.json();
-
         if (!res.ok) {
           if (!retrying && data?.code === "token_not_valid") {
             const refreshed = await refreshAccessToken();
             if (refreshed) return getProfile(true);
           }
-
-          errorEl.innerText = '❌ Failed to fetch profile. Are you logged in?';
           u.innerText = e.innerText = r.innerText = '-';
+          errorEl.innerText = '❌ Failed to fetch profile.';
           document.getElementById("admin-panel").style.display = "none";
-          document.getElementById("logout-panel").style.display = "none";
         } else {
           u.innerText = data.username;
           e.innerText = data.email;
           r.innerText = data.role;
-
-          document.getElementById("logout-panel").style.display = "block";
-
+          errorEl.innerText = '';
           if (data.role === 'admin') {
             document.getElementById("admin-panel").style.display = "block";
           } else {
             document.getElementById("admin-panel").style.display = "none";
           }
         }
-
-      } catch (err) {
-        errorEl.innerText = '❌ Network error while fetching profile.';
-        u.innerText = e.innerText = r.innerText = '-';
-        document.getElementById("admin-panel").style.display = "none";
-        document.getElementById("logout-panel").style.display = "none";
+      } catch {
+        errorEl.innerText = '❌ Network error.';
       }
     }
 
@@ -261,44 +329,32 @@
 
       try {
         const res = await fetch(`${BASE_URL}/api/admin-area/`, {
-          headers: {
-            Authorization: 'Bearer ' + accessToken
-          }
+          headers: { Authorization: 'Bearer ' + accessToken }
         });
 
         const data = await res.json();
-
-        if (!res.ok) {
-          resultBox.innerText = '❌ Access denied: ' + (data?.detail || 'Unknown error');
-        } else {
-          resultBox.innerText = '✅ ' + JSON.stringify(data, null, 2);
-        }
-
-      } catch (err) {
+        resultBox.innerText = res.ok
+          ? '✅ ' + JSON.stringify(data, null, 2)
+          : '❌ ' + (data?.detail || 'Unknown error');
+      } catch {
         resultBox.innerText = '❌ Network error while accessing admin area.';
       }
     }
 
     async function fetchUsers() {
       const resultBox = document.getElementById("users-result");
-      resultBox.innerText = 'Fetching all users...';
+      resultBox.innerText = 'Fetching users...';
 
       try {
         const res = await fetch(`${BASE_URL}/api/admin/users/`, {
-          headers: {
-            Authorization: 'Bearer ' + accessToken
-          }
+          headers: { Authorization: 'Bearer ' + accessToken }
         });
 
         const data = await res.json();
-
-        if (!res.ok) {
-          resultBox.innerText = '❌ Failed to fetch users: ' + (data?.detail || 'Unknown error');
-        } else {
-          resultBox.innerText = '✅ Users:\n' + JSON.stringify(data, null, 2);
-        }
-
-      } catch (err) {
+        resultBox.innerText = res.ok
+          ? '✅ Users:\n' + JSON.stringify(data, null, 2)
+          : '❌ ' + (data?.detail || 'Unknown error');
+      } catch {
         resultBox.innerText = '❌ Network error while fetching users.';
       }
     }
@@ -306,13 +362,12 @@
     function logout() {
       accessToken = '';
       refreshToken = '';
-      document.getElementById("login-result").innerText = '';
-      document.getElementById("profile-error").innerText = '';
       document.getElementById("p-username").innerText = '-';
       document.getElementById("p-email").innerText = '-';
       document.getElementById("p-role").innerText = '-';
-      document.getElementById("admin-panel").style.display = "none";
       document.getElementById("logout-panel").style.display = "none";
+      document.getElementById("admin-panel").style.display = "none";
+      document.getElementById("profile-error").innerText = '';
       alert("Logged out.");
     }
   </script>
