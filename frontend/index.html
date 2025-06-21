@@ -2,225 +2,171 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>TEDxCUSAT Auth</title>
+  <title>TEDx Auth</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
+    :root {
+      --red: #e62b1e;
+      --black: #000;
+      --white: #fff;
+    }
     body {
-      font-family: sans-serif;
-      max-width: 600px;
-      margin: auto;
-      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: var(--white);
+      color: var(--black);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
     }
-
-    input, button {
-      display: block;
-      margin: 10px 0;
-      padding: 8px;
-      width: 100%;
+    h1 {
+      color: var(--black);
     }
-
-    .box {
+    input {
+      padding: 10px;
+      margin: 5px;
+      width: 250px;
       border: 1px solid #ccc;
-      padding: 16px;
-      margin-bottom: 20px;
-      border-radius: 8px;
+      border-radius: 5px;
     }
-
-    .error {
-      color: #c00;
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      color: var(--white);
+      background-color: var(--red);
+      cursor: pointer;
+      font-weight: bold;
     }
-
-    .success {
-      color: #0a0;
+    .google-btn {
+      background-color: var(--red);
+    }
+    .hidden {
+      display: none;
+    }
+    #profile {
+      margin-top: 2rem;
+      padding: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      width: 300px;
+      background: #f9f9f9;
     }
   </style>
 </head>
 <body>
-  <h1>TEDxCUSAT Auth Tester</h1>
 
-  <div class="box">
-    <h3>Signup</h3>
-    <input id="signup-username" placeholder="Username">
-    <input id="signup-email" placeholder="Email">
-    <input id="signup-password" placeholder="Password" type="password">
-    <button onclick="signup()">Sign Up</button>
-    <div id="signup-result"></div>
-  </div>
+  <h1>TEDx Auth</h1>
 
-  <div class="box">
-    <h3>Login (Username or Email)</h3>
-    <input id="login-identifier" placeholder="Username or Email">
-    <input id="login-password" placeholder="Password" type="password">
-    <button onclick="login()">Log In</button>
-    <div id="login-result"></div>
-  </div>
+  <div id="auth" style="display: flex; flex-direction: column; align-items: center;">
+    <input type="text" id="username" placeholder="Username or Email">
+    <input type="password" id="password" placeholder="Password">
 
-  <div class="box">
-    <h3>Login with Google</h3>
-    <button onclick="googleLogin()">Login via Google</button>
-  </div>
-
-  <div class="box">
-    <h3>Get Profile</h3>
-    <button onclick="getProfile()">Fetch Profile (JWT Required)</button>
-    <div id="profile-display">
-      <p><strong>Username:</strong> <span id="p-username">-</span></p>
-      <p><strong>Email:</strong> <span id="p-email">-</span></p>
-      <p><strong>Role:</strong> <span id="p-role">-</span></p>
-      <p id="profile-error" style="color: red;"></p>
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+      <button onclick="login()">Sign In</button>
+      <button onclick="signup()">Sign Up</button>
     </div>
+
+    <button class="google-btn" style="margin-top: 10px;" onclick="loginWithGoogle()">Sign in with Google</button>
   </div>
 
-  <div class="box" id="admin-panel" style="display: none;">
-    <h3>Admin Control Panel</h3>
-    <button onclick="accessAdminArea()">Access Admin Area</button>
-    <pre id="admin-result"></pre>
+  <div id="profile" class="hidden">
+    <h2>Profile</h2>
+    <p><strong>Username:</strong> <span id="p_username"></span></p>
+    <p><strong>Email:</strong> <span id="p_email"></span></p>
+    <p><strong>Role:</strong> <span id="p_role"></span></p>
+    <button onclick="logout()">Log Out</button>
   </div>
 
   <script>
-    const BASE_URL = 'https://tedx-auth-api.onrender.com';
-    let accessToken = '';
+    const API = 'https://tedx-auth-api.onrender.com';
 
-    window.onload = () => {
-      const params = new URLSearchParams(window.location.search);
-      const access = params.get("access");
-      if (access) {
-        accessToken = access;
-        document.getElementById("login-result").innerText = "✅ Logged in via Google!";
-      }
-    };
+    const token = localStorage.getItem('access_token');
+    if (token) fetchProfile();
 
-    async function signup() {
-      const payload = {
-        username: document.getElementById('signup-username').value,
-        email: document.getElementById('signup-email').value,
-        password: document.getElementById('signup-password').value
-      };
+    function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
 
-      const resultBox = document.getElementById('signup-result');
-      resultBox.innerText = 'Signing up...';
-
-      try {
-        const res = await fetch(`${BASE_URL}/api/signup/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          resultBox.className = 'error';
-          resultBox.innerText = '❌ ' + (data?.email || data?.username || data?.password || JSON.stringify(data));
+      fetch(`${API}/api/login/`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ username, password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.access) {
+          localStorage.setItem('access_token', data.access);
+          fetchProfile();
         } else {
-          resultBox.className = 'success';
-          resultBox.innerText = '✅ Signup successful!';
+          alert('Login failed');
         }
-      } catch (err) {
-        resultBox.className = 'error';
-        resultBox.innerText = '❌ Network error. Is the server running?';
-      }
+      });
     }
 
-    async function login() {
-      const payload = {
-        username: document.getElementById('login-identifier').value,
-        password: document.getElementById('login-password').value
-      };
+    function signup() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
 
-      const resultBox = document.getElementById('login-result');
-      resultBox.innerText = 'Logging in...';
-
-      try {
-        const res = await fetch(`${BASE_URL}/api/login/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          resultBox.className = 'error';
-          resultBox.innerText = '❌ Invalid username/email or password.';
+      fetch(`${API}/api/signup/`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ username, password, email: username })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.username) {
+          alert('Signup successful. You can now log in.');
         } else {
-          accessToken = data.access || '';
-          resultBox.className = 'success';
-          resultBox.innerText = '✅ Logged in successfully!\n\n' + JSON.stringify(data, null, 2);
+          alert('Signup failed.');
         }
-
-      } catch (err) {
-        resultBox.className = 'error';
-        resultBox.innerText = '❌ Network error.';
-      }
+      });
     }
 
-    function googleLogin() {
-      window.location.href = `${BASE_URL}/oauth/login/google-oauth2/`;
+    function loginWithGoogle() {
+      window.location.href = `${API}/oauth/login/google-oauth2/`;
     }
 
-    async function getProfile() {
-      const errorEl = document.getElementById("profile-error");
-      const u = document.getElementById("p-username");
-      const e = document.getElementById("p-email");
-      const r = document.getElementById("p-role");
+    function fetchProfile() {
+      const token = localStorage.getItem('access_token');
+      if (!token) return;
 
-      errorEl.innerText = '';
-      u.innerText = e.innerText = r.innerText = '...';
-
-      try {
-        const res = await fetch(`${BASE_URL}/api/profile/`, {
-          headers: {
-            Authorization: 'Bearer ' + accessToken
-          }
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          errorEl.innerText = '❌ Failed to fetch profile. Are you logged in?';
-          u.innerText = e.innerText = r.innerText = '-';
-          document.getElementById("admin-panel").style.display = "none";
-        } else {
-          u.innerText = data.username;
-          e.innerText = data.email;
-          r.innerText = data.role;
-
-          if (data.role === 'admin') {
-            document.getElementById("admin-panel").style.display = "block";
-          } else {
-            document.getElementById("admin-panel").style.display = "none";
-          }
-        }
-
-      } catch (err) {
-        errorEl.innerText = '❌ Network error while fetching profile.';
-        u.innerText = e.innerText = r.innerText = '-';
-        document.getElementById("admin-panel").style.display = "none";
-      }
+      fetch(`${API}/api/profile/`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Not logged in');
+        return res.json();
+      })
+      .then(data => {
+        document.getElementById('auth').classList.add('hidden');
+        document.getElementById('profile').classList.remove('hidden');
+        document.getElementById('p_username').textContent = data.username;
+        document.getElementById('p_email').textContent = data.email;
+        document.getElementById('p_role').textContent = data.role || 'user';
+      })
+      .catch(err => {
+        console.warn(err);
+        localStorage.removeItem('access_token');
+        document.getElementById('auth').classList.remove('hidden');
+        document.getElementById('profile').classList.add('hidden');
+      });
     }
 
-    async function accessAdminArea() {
-      const resultBox = document.getElementById("admin-result");
-      resultBox.innerText = 'Fetching admin-only data...';
+    function logout() {
+      localStorage.removeItem('access_token');
+      document.getElementById('auth').classList.remove('hidden');
+      document.getElementById('profile').classList.add('hidden');
+    }
 
-      try {
-        const res = await fetch(`${BASE_URL}/api/admin-area/`, {
-          headers: {
-            Authorization: 'Bearer ' + accessToken
-          }
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          resultBox.innerText = '❌ Access denied: ' + (data?.detail || 'Unknown error');
-        } else {
-          resultBox.innerText = '✅ ' + JSON.stringify(data, null, 2);
-        }
-
-      } catch (err) {
-        resultBox.innerText = '❌ Network error while accessing admin area.';
-      }
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('access')) {
+      const access = urlParams.get('access');
+      localStorage.setItem('access_token', access);
+      window.history.replaceState({}, document.title, '/');
+      fetchProfile();
     }
   </script>
 </body>
