@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>TEDx Auth Tester</title>
+  <title>TEDxCUSAT Auth</title>
   <style>
     body {
       font-family: sans-serif;
@@ -77,6 +77,7 @@
   </div>
 
   <script>
+    const BASE_URL = 'https://tedx-auth-api.onrender.com';
     let accessToken = '';
 
     window.onload = () => {
@@ -99,7 +100,7 @@
       resultBox.innerText = 'Signing up...';
 
       try {
-        const res = await fetch('http://127.0.0.1:8000/api/signup/', {
+        const res = await fetch(`${BASE_URL}/api/signup/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -130,7 +131,7 @@
       resultBox.innerText = 'Logging in...';
 
       try {
-        const res = await fetch('http://127.0.0.1:8000/api/login/', {
+        const res = await fetch(`${BASE_URL}/api/login/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -140,11 +141,7 @@
 
         if (!res.ok) {
           resultBox.className = 'error';
-          if (res.status === 401 || res.status === 400) {
-            resultBox.innerText = '❌ Invalid username/email or password.';
-          } else {
-            resultBox.innerText = '⚠️ Login failed. Please try again later.';
-          }
+          resultBox.innerText = '❌ Invalid username/email or password.';
         } else {
           accessToken = data.access || '';
           resultBox.className = 'success';
@@ -153,12 +150,12 @@
 
       } catch (err) {
         resultBox.className = 'error';
-        resultBox.innerText = '❌ Network error. Is the server running?';
+        resultBox.innerText = '❌ Network error.';
       }
     }
 
     function googleLogin() {
-      window.location.href = 'http://127.0.0.1:8000/oauth/login/google-oauth2/';
+      window.location.href = `${BASE_URL}/oauth/login/google-oauth2/`;
     }
 
     async function getProfile() {
@@ -171,7 +168,7 @@
       u.innerText = e.innerText = r.innerText = '...';
 
       try {
-        const res = await fetch('http://127.0.0.1:8000/api/profile/', {
+        const res = await fetch(`${BASE_URL}/api/profile/`, {
           headers: {
             Authorization: 'Bearer ' + accessToken
           }
@@ -207,7 +204,7 @@
       resultBox.innerText = 'Fetching admin-only data...';
 
       try {
-        const res = await fetch('http://127.0.0.1:8000/api/admin-area/', {
+        const res = await fetch(`${BASE_URL}/api/admin-area/`, {
           headers: {
             Authorization: 'Bearer ' + accessToken
           }

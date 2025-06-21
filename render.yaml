@@ -15,3 +15,8 @@ services:
       - key: DEBUG
         value: false
 
+  - type: static
+    name: tedx-auth-frontend
+    rootDir: frontend
+    buildCommand: echo "No build step"
+    staticPublishPath: .
