@@ -234,6 +234,8 @@
       };
 
       const resultBox = document.getElementById('login-result');
+      resultBox.className = '';
+      resultBox.innerText = 'Logging in...';
 
       try {
         const res = await fetch(`${BASE_URL}/api/login/`, {
