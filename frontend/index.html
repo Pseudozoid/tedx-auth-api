@@ -61,7 +61,8 @@
   <h1>TEDx Auth</h1>
 
   <div id="auth" style="display: flex; flex-direction: column; align-items: center;">
-    <input type="text" id="username" placeholder="Username or Email">
+    <input type="text" id="username" placeholder="Username">
+    <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
 
     <div style="display: flex; gap: 10px; margin-top: 10px;">
@@ -108,12 +109,13 @@
 
     function signup() {
       const username = document.getElementById('username').value;
+      const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
 
       fetch(`${API}/api/signup/`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ username, password, email: username })
+        body: JSON.stringify({ username, password, email })
       })
       .then(res => res.json())
       .then(data => {
