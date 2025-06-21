@@ -112,12 +112,14 @@
 <body>
   <h1>TEDxCUSAT Auth</h1>
 
+  <!-- Login/Signup Tab UI -->
   <div class="box">
     <div class="tab-header">
       <div id="login-tab-btn" class="tab-button active" onclick="switchTab('login')">Login</div>
       <div id="signup-tab-btn" class="tab-button" onclick="switchTab('signup')">Signup</div>
     </div>
 
+    <!-- Login form -->
     <div id="login-tab" class="tab-content active">
       <input id="login-identifier" placeholder="Username or Email" />
       <input id="login-password" placeholder="Password" type="password" />
@@ -125,6 +127,7 @@
       <div id="login-result"></div>
     </div>
 
+    <!-- Signup form -->
     <div id="signup-tab" class="tab-content">
       <input id="signup-username" placeholder="Username" />
       <input id="signup-email" placeholder="Email" />
@@ -134,11 +137,13 @@
     </div>
   </div>
 
+  <!-- Google OAuth -->
   <div class="box">
     <h3>Or use your Google Account</h3>
     <button onclick="googleLogin()">Login with Google</button>
   </div>
 
+  <!-- Profile Fetch Section -->
   <div class="box">
     <h3>Profile</h3>
     <button onclick="getProfile()">Fetch Profile</button>
@@ -150,6 +155,7 @@
     </div>
   </div>
 
+  <!-- Admin Only Section -->
   <div class="box" id="admin-panel" style="display: none;">
     <h3>Admin Panel</h3>
     <button onclick="accessAdminArea()">Access Admin Area</button>
@@ -158,6 +164,7 @@
     <pre id="users-result"></pre>
   </div>
 
+  <!-- Logout Button -->
   <div class="box" id="logout-panel" style="display: none;">
     <h3>Logout</h3>
     <button onclick="logout()">Log Out</button>
@@ -168,6 +175,7 @@
     let accessToken = '';
     let refreshToken = '';
 
+    // Toggle between Login and Signup tabs
     function switchTab(tab) {
       ['login', 'signup'].forEach(t => {
         document.getElementById(`${t}-tab`).classList.remove('active');
@@ -177,6 +185,7 @@
       document.getElementById(`${tab}-tab-btn`).classList.add('active');
     }
 
+    // Check for token in URL after Google OAuth login
     window.onload = () => {
       const params = new URLSearchParams(window.location.search);
       const access = params.get("access");
@@ -190,6 +199,7 @@
       }
     };
 
+    // Signup request
     async function signup() {
       const resultBox = document.getElementById('signup-result');
       const password = document.getElementById('signup-password').value;
@@ -227,6 +237,7 @@
       }
     }
 
+    // Login request
     async function login() {
       const payload = {
         username: document.getElementById('login-identifier').value,
@@ -235,7 +246,7 @@
 
       const resultBox = document.getElementById('login-result');
       resultBox.className = '';
-      resultBox.innerText = 'Logging in...';
+      resultBox.innerText = 'Logging in...'; // Status message while logging in
 
       try {
         const res = await fetch(`${BASE_URL}/api/login/`, {
@@ -262,10 +273,12 @@
       }
     }
 
+    // Redirect to Google OAuth
     function googleLogin() {
       window.location.href = `${BASE_URL}/oauth/login/google-oauth2/`;
     }
 
+    // Refresh access token using refresh token
     async function refreshAccessToken() {
       if (!refreshToken) return false;
       try {
@@ -289,6 +302,7 @@
       }
     }
 
+    // Fetch logged in user's profile
     async function getProfile(retrying = false) {
       const u = document.getElementById("p-username");
       const e = document.getElementById("p-email");
@@ -325,6 +339,7 @@
       }
     }
 
+    // Hit admin-only endpoint
     async function accessAdminArea() {
       const resultBox = document.getElementById("admin-result");
       resultBox.innerText = 'Fetching admin-only data...';
@@ -343,6 +358,7 @@
       }
     }
 
+    // List all users (admin only)
     async function fetchUsers() {
       const resultBox = document.getElementById("users-result");
       resultBox.innerText = 'Fetching users...';
@@ -361,6 +377,7 @@
       }
     }
 
+    // Clear all tokens and UI state
     function logout() {
       accessToken = '';
       refreshToken = '';
