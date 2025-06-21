@@ -54,67 +54,30 @@
     <div id="login-result"></div>
   </div>
 
-  <div class="box">
-    <h3>Login with Google</h3>
-    <button onclick="googleLogin()">Login via Google</button>
-  </div>
-
-  <div class="box">
-    <h3>Get Profile</h3>
-    <button onclick="getProfile()">Fetch Profile (JWT Required)</button>
-    <div id="profile-display">
-      <p><strong>Username:</strong> <span id="p-username">-</span></p>
-      <p><strong>Email:</strong> <span id="p-email">-</span></p>
-      <p><strong>Role:</strong> <span id="p-role">-</span></p>
-      <p id="profile-error" style="color: red;"></p>
-    </div>
-  </div>
-
-  <div class="box" id="admin-panel" style="display: none;">
-    <h3>Admin Control Panel</h3>
-    <button onclick="accessAdminArea()">Access Admin Area</button>
-    <button onclick="listUsers()">List All Users</button>
-    <pre id="admin-result"></pre>
-    <pre id="user-list"></pre>
-  </div>
-
-  <div class="box" id="logout-panel" style="display: none;">
-    <h3>Logout</h3>
-    <button onclick="logout()">Log Out</button>
-  </div>
-
   <script>
     const BASE_URL = 'https://tedx-auth-api.onrender.com';
     let accessToken = '';
     let refreshToken = '';
 
-    window.onload = () => {
-      const params = new URLSearchParams(window.location.search);
-      const access = params.get("access");
-      const refresh = params.get("refresh");
-      if (access) {
-        accessToken = access;
-        refreshToken = refresh || '';
-        document.getElementById("login-result").innerText = "✅ Logged in via Google!";
-        document.getElementById("logout-panel").style.display = "block";
-      }
-    };
-
     async function signup() {
-      const payload = {
-        username: document.getElementById('signup-username').value,
-        email: document.getElementById('signup-email').value,
-        password: document.getElementById('signup-password').value
-      };
-
+      const username = document.getElementById('signup-username').value;
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
       const resultBox = document.getElementById('signup-result');
+
+      if (password.length < 8) {
+        resultBox.className = 'error';
+        resultBox.innerText = '❌ Password must be at least 8 characters long.';
+        return;
+      }
+
       resultBox.innerText = 'Signing up...';
 
       try {
         const res = await fetch(`${BASE_URL}/api/signup/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({ username, email, password })
         });
 
         const data = await res.json();
@@ -133,19 +96,23 @@
     }
 
     async function login() {
-      const payload = {
-        username: document.getElementById('login-identifier').value,
-        password: document.getElementById('login-password').value
-      };
-
+      const identifier = document.getElementById('login-identifier').value;
+      const password = document.getElementById('login-password').value;
       const resultBox = document.getElementById('login-result');
+
+      if (password.length < 8) {
+        resultBox.className = 'error';
+        resultBox.innerText = '❌ Password must be at least 8 characters.';
+        return;
+      }
+
       resultBox.innerText = 'Logging in...';
 
       try {
         const res = await fetch(`${BASE_URL}/api/login/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({ username: identifier, password })
         });
 
         const data = await res.json();
@@ -158,152 +125,11 @@
           refreshToken = data.refresh || '';
           resultBox.className = 'success';
           resultBox.innerText = '✅ Logged in successfully!';
-          document.getElementById("logout-panel").style.display = "block";
         }
-
       } catch (err) {
         resultBox.className = 'error';
         resultBox.innerText = '❌ Network error.';
       }
-    }
-
-    function googleLogin() {
-      window.location.href = `${BASE_URL}/oauth/login/google-oauth2/`;
-    }
-
-    async function refreshAccessToken() {
-      if (!refreshToken) return false;
-
-      try {
-        const res = await fetch(`${BASE_URL}/api/token/refresh/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refresh: refreshToken })
-        });
-
-        const data = await res.json();
-        if (res.ok && data.access) {
-          accessToken = data.access;
-          return true;
-        } else {
-          logout();
-          return false;
-        }
-      } catch (err) {
-        logout();
-        return false;
-      }
-    }
-
-    async function getProfile(retrying = false) {
-      const errorEl = document.getElementById("profile-error");
-      const u = document.getElementById("p-username");
-      const e = document.getElementById("p-email");
-      const r = document.getElementById("p-role");
-
-      errorEl.innerText = '';
-      u.innerText = e.innerText = r.innerText = '...';
-
-      try {
-        const res = await fetch(`${BASE_URL}/api/profile/`, {
-          headers: {
-            Authorization: 'Bearer ' + accessToken
-          }
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          if (!retrying && data?.code === "token_not_valid") {
-            const refreshed = await refreshAccessToken();
-            if (refreshed) return getProfile(true);
-          }
-
-          errorEl.innerText = '❌ Failed to fetch profile. Are you logged in?';
-          u.innerText = e.innerText = r.innerText = '-';
-          document.getElementById("admin-panel").style.display = "none";
-          document.getElementById("logout-panel").style.display = "none";
-        } else {
-          u.innerText = data.username;
-          e.innerText = data.email;
-          r.innerText = data.role;
-
-          document.getElementById("logout-panel").style.display = "block";
-
-          if (data.role === 'admin') {
-            document.getElementById("admin-panel").style.display = "block";
-          } else {
-            document.getElementById("admin-panel").style.display = "none";
-          }
-        }
-
-      } catch (err) {
-        errorEl.innerText = '❌ Network error while fetching profile.';
-        u.innerText = e.innerText = r.innerText = '-';
-        document.getElementById("admin-panel").style.display = "none";
-        document.getElementById("logout-panel").style.display = "none";
-      }
-    }
-
-    async function accessAdminArea() {
-      const resultBox = document.getElementById("admin-result");
-      resultBox.innerText = 'Fetching admin-only data...';
-
-      try {
-        const res = await fetch(`${BASE_URL}/api/admin-area/`, {
-          headers: {
-            Authorization: 'Bearer ' + accessToken
-          }
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          resultBox.innerText = '❌ Access denied: ' + (data?.detail || 'Unknown error');
-        } else {
-          resultBox.innerText = '✅ ' + JSON.stringify(data, null, 2);
-        }
-
-      } catch (err) {
-        resultBox.innerText = '❌ Network error while accessing admin area.';
-      }
-    }
-
-    async function listUsers() {
-      const output = document.getElementById("user-list");
-      output.innerText = "Fetching user list...";
-
-      try {
-        const res = await fetch(`${BASE_URL}/api/admin/users/`, {
-          headers: {
-            Authorization: 'Bearer ' + accessToken
-          }
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          output.innerText = '❌ Access denied or failed to fetch users.';
-        } else {
-          output.innerText = JSON.stringify(data, null, 2);
-        }
-
-      } catch (err) {
-        output.innerText = '❌ Network error while fetching user list.';
-      }
-    }
-
-    function logout() {
-      accessToken = '';
-      refreshToken = '';
-      document.getElementById("login-result").innerText = '';
-      document.getElementById("profile-error").innerText = '';
-      document.getElementById("p-username").innerText = '-';
-      document.getElementById("p-email").innerText = '-';
-      document.getElementById("p-role").innerText = '-';
-      document.getElementById("admin-panel").style.display = "none";
-      document.getElementById("logout-panel").style.display = "none";
-      alert("Logged out.");
     }
   </script>
 </body>
