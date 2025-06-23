@@ -5,7 +5,7 @@ It includes secure backend functionality with a minimal frontend for testing and
 
 Deployed live using Render [here](https://tedx-auth-frontend.onrender.com/).
 
-⚠️ If requests seem stuck or take unusually long, this is expected due to server cold starts (see [Important Notes](#️important-notes)).
+⚠️ If requests seem stuck or take unusually long, this is expected due to server cold starts ( see [#️important-notes ](https://github.com/Pseudozoid/tedx-auth-api/blob/main/README.md#%EF%B8%8F-important-notes)).
 
 Supports:
 - Secure user registration and login  
