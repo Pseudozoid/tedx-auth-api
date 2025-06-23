@@ -5,6 +5,8 @@ It includes secure backend functionality with a minimal frontend for testing and
 
 Deployed live using Render [here](https://tedx-auth-frontend.onrender.com/).
 
+⚠️ If requests seem stuck or take unusually long, this is expected due to server cold starts (see [Important Notes](#️important-notes)).
+
 Supports:
 - Secure user registration and login  
 - Password hashing (via Django's built-in system)  
